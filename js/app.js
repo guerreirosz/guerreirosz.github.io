@@ -945,7 +945,7 @@
   });
   $('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
   $('#authorFoot').textContent = SITE.author;
-  if (SITE.livepix) { const d = $('#donateFoot'); d.href = SITE.livepix; d.classList.remove('hidden'); }
+  if (SITE.livepix) for (const id of ['donateFoot', 'donateTop']) { const d = $('#' + id); d.href = SITE.livepix; d.classList.remove('hidden'); }
   const d = W.gen ? new Date(W.gen) : null;
   $('#dataInfo').innerHTML = `Dados da <a href="${W.src}" target="_blank" rel="noopener">Wiki idleDEX</a>${d ? ' · atualizados em ' + d.toLocaleDateString('pt-BR') : ''}`;
   lastSec = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[0];
