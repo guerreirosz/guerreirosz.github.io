@@ -2,6 +2,7 @@
 (function () {
   const W = window.WIKI;
   const S = window.STRAT;
+  const SITE = { author: 'Guerreiros Z', authorRole: '', livepix: '', ...(window.SITE || {}) };
   S.init(W);
   const MOVES = S.MOVES();
   const $ = (sel, el = document) => el.querySelector(sel);
@@ -152,6 +153,19 @@
           <div>✅ Novato pergunta, veterano responde. Sem julgamento.</div>
         </div>
       </div>
+    </section>
+
+    <section class="mt3">
+      <div class="card credit">
+        <div class="credit-ava">🛠️</div>
+        <div style="flex:1;min-width:220px">
+          <div class="kicker">Quem fez o site</div>
+          <h3 style="margin:0">Feito por <span class="nick">${esc(SITE.author)}</span></h3>
+          <p class="small dim" style="margin:6px 0 0">${esc(SITE.authorRole)}. Montei este site para a guilda parar de procurar as mesmas coisas na wiki toda hora. Achou um erro ou tem uma ideia? Me chama no jogo ou no grupo da guilda.</p>
+        </div>
+        ${SITE.livepix ? `<a class="btn primary" href="${esc(SITE.livepix)}" target="_blank" rel="noopener">☕ Apoie o site</a>` : ''}
+      </div>
+      ${SITE.livepix ? '<p class="tiny dim mt">Apoio 100% opcional: ajuda a manter o site no ar e não libera nada a mais. Tudo continua aberto para todo mundo.</p>' : ''}
     </section>
 
     <section class="mt3">
@@ -930,6 +944,8 @@
     lastSec = sec; route();
   });
   $('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
+  $('#authorFoot').textContent = SITE.author;
+  if (SITE.livepix) { const d = $('#donateFoot'); d.href = SITE.livepix; d.classList.remove('hidden'); }
   const d = W.gen ? new Date(W.gen) : null;
   $('#dataInfo').innerHTML = `Dados da <a href="${W.src}" target="_blank" rel="noopener">Wiki idleDEX</a>${d ? ' · atualizados em ' + d.toLocaleDateString('pt-BR') : ''}`;
   lastSec = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[0];
