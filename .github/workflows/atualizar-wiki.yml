@@ -4,7 +4,7 @@ name: Atualizar dados da wiki
 
 on:
   schedule:
-    - cron: '30 7 * * *'   # todo dia às 04:30 de Brasília
+    - cron: '0 4 * * *'    # todo dia à 01:00 de Brasília (04:00 UTC)
   workflow_dispatch: {}     # botão "Run workflow" para atualizar na hora
 
 permissions:
