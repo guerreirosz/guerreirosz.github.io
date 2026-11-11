@@ -1,0 +1,35 @@
+# Atualiza os dados do site com a Wiki idleDEX uma vez por dia.
+# Funciona sozinho quando o projeto estiver no GitHub (com GitHub Pages ligado).
+name: Atualizar dados da wiki
+
+on:
+  schedule:
+    - cron: '30 7 * * *'   # todo dia às 04:30 de Brasília
+  workflow_dispatch: {}     # botão "Run workflow" para atualizar na hora
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Extrair a wiki
+        run: node scripts/extract-wiki.mjs
+      - name: Montar o arquivo do site
+        run: node scripts/build-data.mjs
+      - name: Salvar se mudou
+        run: |
+          git config user.name "guerreiros-z-bot"
+          git config user.email "guerreiros-z-bot@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet -- data/wiki.json; then
+            echo "Nada mudou na wiki."
+          else
+            git commit -m "Atualiza dados da wiki"
+            git push
+          fi
