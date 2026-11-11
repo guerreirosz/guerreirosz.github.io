@@ -3,6 +3,6 @@ window.SITE = {
   author: '2b#hg42',                 // nick de quem fez o site (aparece nos créditos)
   authorRole: 'Membro da Guerreiros Z',
   livepix: 'https://livepix.gg/odoisbe',
-  assinatura: '',                    // link do plano de assinatura no Livepix. Vazio = botão de assinar escondido.
+  assinatura: 'https://livepix.gg/odoisbe/apoiador-guerreiro-z',                   // link do plano de assinatura no Livepix. Vazio = botão de assinar escondido.
   assinaturaValor: 'R$ 5/mês',                     // cole aqui o link da sua página do Livepix (ex.: https://livepix.gg/seunome). Vazio = botão escondido.
 };

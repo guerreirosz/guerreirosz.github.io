@@ -206,6 +206,14 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .credit{display:flex;align-items:center;gap:18px;flex-wrap:wrap;border-color:rgba(255,138,31,.45);background:linear-gradient(120deg,rgba(255,138,31,.12),var(--panel) 45%,var(--bg2))}
 .credit-ava{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:2rem;background:var(--bg2);border:1px solid var(--line2)}
 .nick{background:linear-gradient(90deg,var(--z),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan-opt{position:relative;display:flex;flex-direction:column;gap:6px;padding:18px;border-radius:var(--radius);border:1px solid var(--line2);background:var(--panel);color:var(--body);transition:.2s}
+.plan-opt:hover{border-color:var(--z);transform:translateY(-2px);color:var(--body)}
+.plan-opt b{color:var(--text);font-family:var(--display);font-weight:400;font-size:1.1rem}
+.plan-opt .price{font-family:var(--display);font-size:1.5rem;color:var(--text)}
+.plan-opt .go{margin-top:auto;padding-top:6px;color:var(--z2);font-weight:600}
+.plan-opt.star{border-color:rgba(255,214,102,.6);background:linear-gradient(150deg,rgba(255,214,102,.14),var(--panel) 60%)}
+.plan-opt.star .price{color:var(--gold)}
+.plan-opt .tag{position:absolute;top:12px;right:12px;font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a0d00;background:var(--gold);padding:3px 8px;border-radius:99px}
 .supporter{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--bg2);border:1px solid var(--line2);color:var(--text);font-weight:500;font-size:.9rem}
 .supporter.sub{border-color:rgba(255,214,102,.6);background:linear-gradient(135deg,rgba(255,214,102,.16),rgba(255,138,31,.08));color:var(--gold)}
 .foot{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--dim);font-size:.85rem}

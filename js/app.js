@@ -163,11 +163,23 @@
           <h3 style="margin:0">Feito por <span class="nick">${esc(SITE.author)}</span></h3>
           <p class="small dim" style="margin:6px 0 0">${esc(SITE.authorRole)}. Montei este site para a guilda parar de procurar as mesmas coisas na wiki toda hora. Achou um erro ou tem uma ideia? Me chama no jogo ou no grupo da guilda.</p>
         </div>
-        <div class="row" style="flex-direction:column;align-items:stretch;gap:8px">
-          ${SITE.assinatura ? `<a class="btn primary" href="${esc(SITE.assinatura)}" target="_blank" rel="noopener">⭐ Assinar · ${esc(SITE.assinaturaValor)}</a>` : ''}
-          ${SITE.livepix ? `<a class="btn ${SITE.assinatura ? '' : 'primary'}" href="${esc(SITE.livepix)}" target="_blank" rel="noopener">☕ ${SITE.assinatura ? 'Apoiar uma vez' : 'Apoie o site'}</a>` : ''}
-        </div>
+        ${!SITE.assinatura && SITE.livepix ? `<a class="btn primary" href="${esc(SITE.livepix)}" target="_blank" rel="noopener">☕ Apoie o site</a>` : ''}
       </div>
+      ${SITE.assinatura ? `<div class="grid g2 mt">
+        <a class="plan-opt star" href="${esc(SITE.assinatura)}" target="_blank" rel="noopener">
+          <span class="tag">Mais apoio</span>
+          <b>⭐ Apoiador Guerreiro Z</b>
+          <span class="price">${esc(SITE.assinaturaValor)}</span>
+          <span class="small dim">Seu nick com ⭐ no Mural de Apoiadores, enquanto a assinatura estiver ativa.</span>
+          <span class="go">Assinar →</span>
+        </a>
+        ${SITE.livepix ? `<a class="plan-opt" href="${esc(SITE.livepix)}" target="_blank" rel="noopener">
+          <b>☕ Apoio único</b>
+          <span class="price">a partir de R$ 1</span>
+          <span class="small dim">Qualquer valor, quando quiser. Pode mandar um recadinho junto.</span>
+          <span class="go">Apoiar →</span>
+        </a>` : ''}
+      </div>` : ''}
       ${SITE.livepix ? '<p class="tiny dim mt">Apoio 100% opcional: ajuda a manter o site no ar e não libera nada a mais. Tudo continua aberto para todo mundo.</p>' : ''}
       ${supportersWall()}
     </section>
