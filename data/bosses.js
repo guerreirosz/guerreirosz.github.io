@@ -14,4 +14,16 @@ window.GUILD_BOSSES = [
     seen: '2026-11-10',
     notes: 'Até 24 poções e 12 revives por tentativa. Cada tentativa dura no máximo 10 min. Uma tentativa por dia.',
   },
+  {
+    id: 'gyarados-insano',
+    species: 'Gyarados',
+    mode: 'Insano',
+    level: 100,
+    pointsMult: 1.5,
+    types: ['water', 'flying'],
+    atk: 832, def: 531, spa: 392, spd: 634, spe: 284,
+    moves: ['Hydro Pump', 'Hurricane', 'Thrash', 'Hyper Beam'],
+    seen: '2026-11-11',
+    notes: 'Até 24 poções e 12 revives por tentativa. Cada tentativa dura no máximo 10 min. Uma tentativa por dia.',
+  },
 ];
