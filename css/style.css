@@ -206,6 +206,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .credit{display:flex;align-items:center;gap:18px;flex-wrap:wrap;border-color:rgba(255,138,31,.45);background:linear-gradient(120deg,rgba(255,138,31,.12),var(--panel) 45%,var(--bg2))}
 .credit-ava{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:2rem;background:var(--bg2);border:1px solid var(--line2)}
 .nick{background:linear-gradient(90deg,var(--z),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.supporter{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--bg2);border:1px solid var(--line2);color:var(--text);font-weight:500;font-size:.9rem}
+.supporter.sub{border-color:rgba(255,214,102,.6);background:linear-gradient(135deg,rgba(255,214,102,.16),rgba(255,138,31,.08));color:var(--gold)}
 .foot{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--dim);font-size:.85rem}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--good);color:#06240f;padding:10px 18px;border-radius:12px;font-weight:600;z-index:200;animation:fade .2s}
 .hidden{display:none!important}

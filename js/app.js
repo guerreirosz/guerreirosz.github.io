@@ -163,9 +163,13 @@
           <h3 style="margin:0">Feito por <span class="nick">${esc(SITE.author)}</span></h3>
           <p class="small dim" style="margin:6px 0 0">${esc(SITE.authorRole)}. Montei este site para a guilda parar de procurar as mesmas coisas na wiki toda hora. Achou um erro ou tem uma ideia? Me chama no jogo ou no grupo da guilda.</p>
         </div>
-        ${SITE.livepix ? `<a class="btn primary" href="${esc(SITE.livepix)}" target="_blank" rel="noopener">☕ Apoie o site</a>` : ''}
+        <div class="row" style="flex-direction:column;align-items:stretch;gap:8px">
+          ${SITE.assinatura ? `<a class="btn primary" href="${esc(SITE.assinatura)}" target="_blank" rel="noopener">⭐ Assinar · ${esc(SITE.assinaturaValor)}</a>` : ''}
+          ${SITE.livepix ? `<a class="btn ${SITE.assinatura ? '' : 'primary'}" href="${esc(SITE.livepix)}" target="_blank" rel="noopener">☕ ${SITE.assinatura ? 'Apoiar uma vez' : 'Apoie o site'}</a>` : ''}
+        </div>
       </div>
       ${SITE.livepix ? '<p class="tiny dim mt">Apoio 100% opcional: ajuda a manter o site no ar e não libera nada a mais. Tudo continua aberto para todo mundo.</p>' : ''}
+      ${supportersWall()}
     </section>
 
     <section class="mt3">
@@ -201,6 +205,19 @@
     };
     tickers.push(tick); tick();
     globalSearch($('#gq'), $('#gres'));
+  }
+
+  // ---------- mural de apoiadores ----------
+  function supportersWall() {
+    const list = (window.APOIADORES || []).filter((a) => a && a.nick);
+    if (!list.length) return '';
+    const subs = list.filter((a) => a.tipo === 'assinante'), others = list.filter((a) => a.tipo !== 'assinante');
+    const pill = (a, star) => `<span class="supporter ${star ? 'sub' : ''}">${star ? '⭐' : '☕'} ${esc(a.nick)}</span>`;
+    return `<div class="card mt">
+      <div class="row between"><h3 style="margin:0">💛 Mural de apoiadores</h3><span class="tiny dim">Valeu por manter o site no ar!</span></div>
+      ${subs.length ? `<div class="kicker mt">Apoiadores Guerreiro Z ⭐</div><div class="row">${subs.map((a) => pill(a, true)).join('')}</div>` : ''}
+      ${others.length ? `<div class="kicker mt">Também apoiaram ☕</div><div class="row">${others.map((a) => pill(a, false)).join('')}</div>` : ''}
+    </div>`;
   }
 
   // ---------- busca global ----------
