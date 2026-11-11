@@ -963,9 +963,25 @@
     }
     window.scrollTo({ top: 0 });
   }
+  // ---------- contador de visitas (Umami) ----------
+  // O site usa #/pagina, que o Umami não vê sozinho: avisamos a cada troca de página.
+  // O link compartilhado do boss (?b=...) é cortado para não guardar dados longos.
+  let lastTracked = null;
+  function trackView(tries = 0) {
+    const path = '/' + location.hash.replace(/^#\/?/, '').split('?')[0];
+    if (path === lastTracked) return;
+    if (!window.umami || typeof window.umami.track !== 'function') {
+      if (tries < 20) setTimeout(() => trackView(tries + 1), 500);
+      return;
+    }
+    lastTracked = path;
+    try { window.umami.track((p) => ({ ...p, url: path, title: document.title })); } catch {}
+  }
+
   // abrir detalhes sem redesenhar a página quando já estamos nela
   let lastSec = null;
   window.addEventListener('hashchange', () => {
+    trackView();
     const h = location.hash.replace(/^#\/?/, '').split('?')[0];
     const [sec, arg] = h.split('/');
     if (sec === lastSec && arg && (sec === 'dex' || sec === 'rotas')) { $$('.modal').forEach((m) => m.remove()); sec === 'dex' ? openMon(decodeURIComponent(arg)) : openRoute(decodeURIComponent(arg)); return; }
@@ -979,4 +995,5 @@
   $('#dataInfo').innerHTML = `Dados da <a href="${W.src}" target="_blank" rel="noopener">Wiki idleDEX</a>${d ? ' · atualizados em ' + d.toLocaleDateString('pt-BR') : ''}`;
   lastSec = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[0];
   route();
+  trackView();
 })();
