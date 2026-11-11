@@ -29,7 +29,13 @@ jobs:
           git add data/
           if git diff --cached --quiet -- data/wiki.json; then
             echo "Nada mudou na wiki."
-          else
-            git commit -m "Atualiza dados da wiki"
-            git push
+            exit 0
           fi
+          git commit -m "Atualiza dados da wiki"
+          # se alguém publicou algo enquanto a extração rodava, junta antes de enviar
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            sleep 5
+          done
+          echo "::error::Não consegui enviar. Confira Settings > Actions > General > Workflow permissions = Read and write."
+          exit 1
