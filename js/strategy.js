@@ -193,7 +193,8 @@
     for (const [i, how] of ls) {
       const m = MOVES[i];
       const d = m.fx.drops;
-      const isGuaranteed = m.cat === 'status' || /^Derruba/.test(m.effect);
+      // Captivate só funciona com gênero oposto: o gênero do boss não aparece, então não dá para contar com ele
+      const isGuaranteed = (m.cat === 'status' || /^Derruba/.test(m.effect)) && !/gênero oposto/.test(m.effect);
       if (isGuaranteed) {
         for (const k of Object.keys(d)) {
           const cand = { move: m, n: d[k], how };
