@@ -190,6 +190,7 @@
         <a class="tile" href="#/boss"><span class="em">⚔️</span><b>Boss da guilda</b><span>Debuffers + DPS, time ideal e lista do que upar.</span></a>
         <a class="tile" href="#/dex"><span class="em">🔎</span><b>Onde pego?</b><span>Rotas ordenadas pela maior chance de encontro.</span></a>
         <a class="tile" href="#/itens"><span class="em">💎</span><b>Itens e farm</b><span>Pedras, fragmentos, placas e charms: a melhor rota para cada um.</span></a>
+        <a class="tile" href="#/tms"><span class="em">💿</span><b>TMs</b><span>Escolha uma TM e veja quem aprende, do mais forte ao mais fraco.</span></a>
         <a class="tile" href="#/rotas"><span class="em">🗺️</span><b>Rotas</b><span>Quem aparece, requisitos e bônus de XP de cada mapa.</span></a>
         <a class="tile" href="#/mega"><span class="em">🧬</span><b>Mega</b><span>Mega Boss de sábado, loja de pedras e as ${W.megas.length} formas.</span></a>
         <a class="tile" href="#/shiny"><span class="em">✨</span><b>Shiny</b><span>Calculadora da escada do Shiny Boost.</span></a>
@@ -243,6 +244,7 @@
       const res = [];
       for (const s of W.species) if (norm(s.n).includes(q)) res.push(`<a href="#/dex/${s.slug}">${spr(s, 'sm')}<span>${esc(s.n)}</span><span class="kind">Pokémon</span></a>`);
       for (const it of Object.values(ITEMS)) if (norm(it.name).includes(q)) res.push(`<a href="#/itens/${it.slug}"><img src="${esc(it.img)}" width="28" height="28" style="image-rendering:pixelated" alt=""><span>${esc(it.name)}</span><span class="kind">Item</span></a>`);
+      for (const m of MOVES) if (m.tm && norm(m.name).includes(q)) res.push(`<a href="#/tms/${moveSlug(m)}"><span class="em">💿</span><span>${esc(cap(m.name))}</span> ${tchip(m.type)}<span class="kind">TM</span></a>`);
       for (const r of W.routes) if (norm(r.n).includes(q)) res.push(`<a href="#/rotas/${r.slug}"><span class="em">🗺️</span><span>${esc(r.n)}</span><span class="kind">${r.k === 'portal' ? 'Portal' : 'Rota'}</span></a>`);
       box.innerHTML = res.slice(0, 30).join('') || '<div class="muted-box">Nada encontrado.</div>';
       box.classList.remove('hidden'); hl = -1;
@@ -464,6 +466,7 @@
         <b class="n"><a href="#/dex/${x.s.slug}">${esc(x.s.n)}</a></b>
         <div class="row" style="gap:5px;margin:4px 0">${tchips(x.s.t)} ${immTxt} ${mega}</div>
         <div class="small">${line}</div>
+        ${(() => { const n = natureOf(x.s); return n ? `<div class="tiny" style="margin-top:4px">Nature: ${natTxt(n.best)}${n.alts.length ? ' <span class="dim">ou</span> ' + n.alts.map((a) => esc(a.name)).join(', ') : ''}</div>` : ''; })()}
         <div class="tiny dim" style="margin-top:4px">Onde pegar: ${where}</div>
       </div>
       ${ownedBtn(x.s)}
@@ -615,6 +618,23 @@
     if (slug) openMon(slug);
   }
 
+  // ---------- natures recomendadas (estimativa) ----------
+  const STAT_SHORT = { atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe' };
+  const natTxt = (n) => `<b>${esc(n.name)}</b> <span class="tiny"><span style="color:var(--good)">+${STAT_SHORT[n.up]}</span> <span style="color:var(--bad)">−${STAT_SHORT[n.down]}</span></span>`;
+  const finalForm = (s) => { let cur = s, i = 0; while (cur.et && cur.et.length && i++ < 4) { const nx = BYSLUG[cur.et[0]]; if (!nx) break; cur = nx; } return cur; };
+  function natureOf(s) { return window.NATURES ? window.NATURES.recommend(finalForm(s).st) : null; }
+  function natureBox(s) {
+    const r = natureOf(s); if (!r) return '';
+    const fin = finalForm(s);
+    return `<h3 class="mt2">Nature recomendada</h3>
+      <div class="nature-box">
+        <div><span class="kicker">Melhor</span><div class="nat-main">${natTxt(r.best)}</div></div>
+        ${r.alts.length ? `<div><span class="kicker">Também boas</span><div>${r.alts.map(natTxt).join('<br>')}</div></div>` : ''}
+        <div><span class="kicker" style="color:var(--bad)">Evite</span><div>${natTxt(r.worst)}</div></div>
+      </div>
+      <p class="tiny dim" style="margin-top:6px">Estimativa pelos atributos base${fin !== s ? ` da forma final (${esc(fin.n)})` : ''}: o que mais importa aqui é ${r.top.map((k) => STAT_NAME[k]).join(' e ')}. A nature vale 30% das estrelas. Confira na ficha do jogo o "Peso do IV na nota". <b>Dica:</b> um líder com Synchronize faz metade dos selvagens vir com a nature dele.</p>`;
+  }
+
   function modal(html, onClose) {
     const m = document.createElement('div');
     m.className = 'modal';
@@ -657,6 +677,7 @@
           ${megas.length ? `<p class="small"><b>Mega:</b> ${megas.map((m) => `${esc(m.name)} (${tchips(m.types)}, ${esc(m.ability)}, pedra ${esc(m.stone)})`).join('<br>')}</p>` : ''}
         </div>
       </div>
+      ${natureBox(s)}
       <h3 class="mt2">Onde encontrar</h3>
       ${where.length ? `<div class="tbl-wrap"><table><thead><tr><th>Mapa</th><th>Nível</th><th>Raridade</th><th class="num">Chance por encontro</th></tr></thead><tbody>
         ${where.map((w, i) => `<tr><td>${i === 0 ? '⭐ ' : ''}${routeLink(w[0], w[2])}${w[1] ? ' <span class="chip">portal</span>' : ''}</td><td class="small">${esc(w[3])}</td><td>${rar(w[4])}</td><td class="num"><b>${pctFmt(w[5])}</b></td></tr>`).join('')}
@@ -752,6 +773,90 @@
       <div class="kicker mt">Quem derruba</div>
       <div class="row">${it.drop.sort((a, b) => b.chance - a.chance).map((d) => `<a class="chip" href="#/dex/${d.s.slug}">${spr(d.s, 'sm')}${esc(d.s.n)} · ${pctFmt(d.chance)}</a>`).join('')}</div>
       ${it.drop.some((d) => !d.s.w.some((w) => w[5] != null)) ? '<p class="tiny dim mt">Alguns só aparecem em portais ou eventos, então não entram na conta de rotas.</p>' : ''}`;
+  }
+
+  // =====================================================================
+  // TMs: QUEM APRENDE CADA GOLPE
+  // =====================================================================
+  const moveSlug = (m) => m.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  let LEARN = null; // índice: golpe → { tm: [espécies], lvl: [[espécie, nível]] }
+  function learnIndex() {
+    if (LEARN) return LEARN;
+    LEARN = MOVES.map(() => ({ tm: [], lvl: [] }));
+    for (const s of W.species) {
+      for (const i of s.tm) LEARN[i].tm.push(s);
+      for (const [l, i] of s.lm) if (l <= 100) LEARN[i].lvl.push([s, l]);
+    }
+    return LEARN;
+  }
+  let tmState = { q: '', type: '', cat: '', finalOnly: true, sort: 'power' };
+  function pageTms(slug) {
+    const L = learnIndex();
+    const tms = MOVES.filter((m) => m.tm).sort((a, b) => a.name.localeCompare(b.name));
+    const sel = slug ? MOVES.find((m) => moveSlug(m) === slug) : null;
+    app.innerHTML = `
+    <div class="page">
+      <div class="section-head"><div><div class="kicker">TMs</div><h2>Quem aprende esta TM?</h2><p>Escolha um golpe e veja todos os Pokémon que podem aprender, do mais forte com ele para o mais fraco.</p></div>
+        <a class="small" href="${W.src}/tms" target="_blank" rel="noopener">Vitrine de hoje do Técnico de TMs ↗</a></div>
+      <div class="grid g2">
+        <div class="card">
+          <div class="row">
+            <div class="search-wrap" style="flex:1;min-width:180px"><span class="ico">🔍</span><input type="search" id="tq" placeholder="Nome do golpe… (ex.: Ice Beam)" value="${esc(tmState.q)}"></div>
+            <select id="tt" style="width:auto"><option value="">Todos os tipos</option>${S.TYPES.map((t) => `<option value="${t}" ${t === tmState.type ? 'selected' : ''}>${TI[t][0]}</option>`).join('')}</select>
+            <select id="tc" style="width:auto"><option value="">Físico, especial e status</option><option value="phys">Físico</option><option value="spec">Especial</option><option value="status">Status</option></select>
+          </div>
+          <div class="tbl-wrap mt" style="max-height:620px;overflow:auto"><table><thead><tr><th>TM</th><th>Tipo</th><th class="num">Poder</th><th class="num">Aprendem</th></tr></thead><tbody id="tbody"></tbody></table></div>
+          <p class="tiny dim mt">${tms.length} TMs. 5 Fragmentos de TM = 1 TM da vitrine do dia, no Técnico de TMs do laboratório. Cada TM volta à vitrine a cada 20 dias. Golpe ensinado por TM fica para sempre.</p>
+        </div>
+        <div class="card" id="tmBox">${sel ? '' : '<div class="muted-box">👈 Escolha uma TM para ver quem aprende.</div>'}</div>
+      </div>
+    </div>`;
+    $('#tc').value = tmState.cat;
+    const drawList = () => {
+      const q = tmState.q.toLowerCase();
+      $('#tbody').innerHTML = tms.filter((m) => (!q || m.name.toLowerCase().includes(q)) && (!tmState.type || m.type === tmState.type) && (!tmState.cat || m.cat === tmState.cat))
+        .map((m) => `<tr class="${sel === m ? 'sel' : ''}"><td><a href="#/tms/${moveSlug(m)}"><b>${esc(cap(m.name))}</b></a><br><span class="tiny dim">${CAT[m.cat]}</span></td><td>${tchip(m.type)}</td><td class="num">${m.power ?? '—'}</td><td class="num">${L[m.i].tm.length}</td></tr>`).join('') || '<tr><td colspan="4" class="dim">Nenhuma TM com esses filtros.</td></tr>';
+    };
+    $('#tq').oninput = (e) => { tmState.q = e.target.value; drawList(); };
+    $('#tt').onchange = (e) => { tmState.type = e.target.value; drawList(); };
+    $('#tc').onchange = (e) => { tmState.cat = e.target.value; drawList(); };
+    drawList();
+    if (sel) drawTm(sel);
+  }
+  function drawTm(m) {
+    const L = learnIndex()[m.i];
+    const box = $('#tmBox');
+    const statIdx = m.cat === 'phys' ? 1 : m.cat === 'spec' ? 3 : null;
+    const power = (s) => {
+      if (statIdx == null) return s.st.reduce((a, b) => a + b, 0);
+      return s.st[statIdx] * (s.t.includes(m.type) ? 1.5 : 1);
+    };
+    const draw = () => {
+      let arr = L.tm.filter((s) => !tmState.finalOnly || !(s.et && s.et.length));
+      arr = [...arr].sort(tmState.sort === 'name' ? (a, b) => a.n.localeCompare(b.n) : tmState.sort === 'easy' ? (a, b) => (S.obtain(b)?.best?.[5] || 0) - (S.obtain(a)?.best?.[5] || 0) : (a, b) => power(b) - power(a));
+      const lvl = L.lvl.filter(([s]) => !tmState.finalOnly || !(s.et && s.et.length)).sort((a, b) => a[1] - b[1]);
+      box.innerHTML = `
+        <div class="row between"><h3 style="margin:0">${esc(cap(m.name))}</h3><a class="tiny" href="#/tms">✕ fechar</a></div>
+        <div class="row" style="margin:8px 0">${tchip(m.type)} <span class="chip">${CAT[m.cat]}</span> <span class="chip">Poder ${m.power ?? '—'}</span> <span class="chip">Precisão ${m.acc > 100 ? 'nunca erra' : m.acc + '%'}</span>${m.prio ? ` <span class="chip">Prioridade ${m.prio > 0 ? '+' : ''}${m.prio}</span>` : ''}</div>
+        <p class="small">${esc(m.effect || '')}</p>
+        <div class="row mt">
+          <label class="toggle"><input type="checkbox" id="tmFinal" ${tmState.finalOnly ? 'checked' : ''}> Só a forma final</label>
+          <select id="tmSort" style="width:auto"><option value="power">${statIdx == null ? 'Mais fortes (total base)' : 'Mais fortes com este golpe'}</option><option value="easy">Mais fáceis de achar</option><option value="name">Nome</option></select>
+        </div>
+        <div class="kicker mt">Aprendem por TM (${arr.length})</div>
+        <div class="dex-grid tm-grid">${arr.map((s) => {
+          const o = S.obtain(s);
+          const stab = statIdx != null && s.t.includes(m.type);
+          return `<a class="mon" href="#/dex/${s.slug}">${spr(s, 'sm')}<span style="min-width:0"><b>${esc(s.n)}</b>${stab ? '<span class="chip z" style="padding:0 6px;font-size:.65rem">STAB</span>' : ''}<span class="tiny dim">${statIdx != null ? (statIdx === 1 ? 'Atk ' : 'SpA ') + s.st[statIdx] + ' · ' : ''}${o?.best ? esc(o.best[2].split(' — ')[0]) + ' ' + pctFmt(o.best[5]) : o?.roaming ? 'lendário solto' : '—'}</span></span></a>`;
+        }).join('') || '<div class="muted-box">Ninguém aprende por TM com esse filtro.</div>'}</div>
+        ${lvl.length ? `<details class="mt"><summary class="small" style="cursor:pointer">Também aprendem subindo de nível (${lvl.length})</summary><div class="row mt">${lvl.map(([s, l]) => `<a class="chip" href="#/dex/${s.slug}">${esc(s.n)} <span class="tiny dim">${l <= 1 ? 'já sabe' : 'Nv ' + l}</span></a>`).join('')}</div></details>` : ''}
+        <p class="tiny dim mt">"Mais fortes com este golpe" ordena pelo ${statIdx === 1 ? 'Ataque' : 'At. Especial'} base, com bônus quando o golpe é do mesmo tipo do Pokémon (STAB).</p>`;
+      $('#tmFinal').onchange = (e) => { tmState.finalOnly = e.target.checked; draw(); };
+      $('#tmSort').value = tmState.sort;
+      $('#tmSort').onchange = (e) => { tmState.sort = e.target.value; draw(); };
+    };
+    draw();
+    if (innerWidth < 620) box.scrollIntoView({ behavior: 'smooth' });
   }
 
   // =====================================================================
@@ -953,6 +1058,7 @@
       else if (sec === 'dex') pageDex(arg && decodeURIComponent(arg));
       else if (sec === 'itens') pageItems(arg && decodeURIComponent(arg));
       else if (sec === 'rotas') pageRoutes(arg && decodeURIComponent(arg));
+      else if (sec === 'tms') pageTms(arg && decodeURIComponent(arg));
       else if (sec === 'mega') pageMega();
       else if (sec === 'shiny') pageShiny();
       else if (sec === 'guerra') pageWar();
@@ -985,6 +1091,7 @@
     const h = location.hash.replace(/^#\/?/, '').split('?')[0];
     const [sec, arg] = h.split('/');
     if (sec === lastSec && arg && (sec === 'dex' || sec === 'rotas')) { $$('.modal').forEach((m) => m.remove()); sec === 'dex' ? openMon(decodeURIComponent(arg)) : openRoute(decodeURIComponent(arg)); return; }
+    if (sec === lastSec && sec === 'tms') { const y = window.scrollY; pageTms(arg && decodeURIComponent(arg)); if (!(arg && innerWidth < 620)) window.scrollTo({ top: y }); return; }
     if (sec === lastSec && sec === 'itens') { const y = window.scrollY; pageItems(arg && decodeURIComponent(arg)); window.scrollTo({ top: y }); if (arg && innerWidth < 620) $('#itemBox')?.scrollIntoView({ behavior: 'smooth' }); return; }
     lastSec = sec; route();
   });
