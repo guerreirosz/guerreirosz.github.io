@@ -25,8 +25,13 @@ img{max-width:100%}
 .brand{display:flex;align-items:center;gap:10px;color:var(--text);font-family:var(--display);font-size:1.15rem;white-space:nowrap}
 .brand:hover{color:var(--text)}
 .logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--z),#ff4d1f);color:#1a0d00;font-family:var(--display);font-size:1.3rem;box-shadow:0 0 18px rgba(255,138,31,.55)}
-.nav{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
-.nav::-webkit-scrollbar{display:none}
+.nav{display:flex;align-items:center;gap:4px;margin-left:auto}
+.nav-more{position:relative}
+#navMore{padding:8px 12px;border-radius:10px;color:var(--dim);font-weight:500;white-space:nowrap;font-size:.92rem;background:none;border:none;cursor:pointer}
+#navMore:hover{color:var(--text);background:var(--panel)}
+#navMore.on{color:#1a0d00;background:var(--z)}
+.nav-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);min-width:190px;padding:6px;border-radius:14px;background:var(--bg2);border:1px solid var(--line2);box-shadow:var(--shadow);z-index:60;flex-direction:column;gap:2px}
+.nav-more.open .nav-menu{display:flex}
 .nav a{padding:8px 12px;border-radius:10px;color:var(--dim);font-weight:500;white-space:nowrap;font-size:.92rem}
 .nav a:hover{color:var(--text);background:var(--panel)}
 .nav a.on{color:#1a0d00;background:var(--z)}
@@ -35,13 +40,15 @@ img{max-width:100%}
 .support-top:hover{background:rgba(255,138,31,.12);color:var(--gold);border-color:var(--z)}
 .menu-btn{order:4}
 .menu-btn{display:none;margin-left:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 11px;cursor:pointer}
-@media (max-width:1140px){
+@media (max-width:1040px){
   .menu-btn{display:block;margin-left:8px}
   .support-top{margin-left:auto;padding:7px 10px}
   .support-top .lbl{display:none}
-  .nav{position:fixed;inset:62px 0 auto 0;flex-direction:column;background:var(--bg2);border-bottom:1px solid var(--line);padding:10px 16px;display:none;margin:0}
+  .nav{position:fixed;inset:62px 0 auto 0;flex-direction:column;align-items:stretch;background:var(--bg2);border-bottom:1px solid var(--line);padding:10px 16px;display:none;margin:0;max-height:calc(100vh - 62px);overflow-y:auto}
   .nav.open{display:flex}
   .nav a{padding:12px}
+  #navMore{display:none}
+  .nav-menu{display:flex;position:static;min-width:0;padding:0;border:none;background:none;box-shadow:none}
 }
 
 main{padding:28px 0 60px;min-height:70vh}
@@ -220,6 +227,22 @@ tr.sel td{background:rgba(255,138,31,.10)}
 .nature-box .kicker{display:block;margin-bottom:4px}
 .nature-box .nat-main b{font-family:var(--display);font-weight:400;font-size:1.15rem;color:var(--gold)}
 @media (max-width:620px){.nature-box{grid-template-columns:1fr}}
+/* Pedido do Coletor */
+.col-list{display:flex;flex-direction:column;gap:8px}
+.col-row{border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.col-row[open]{border-color:var(--z)}
+.col-row summary{display:grid;grid-template-columns:32px minmax(0,1fr) 150px;gap:12px;align-items:center;padding:12px 14px;cursor:pointer;list-style:none}
+.col-row summary::-webkit-details-marker{display:none}
+.col-row .pos{font-family:var(--display);color:var(--dim);text-align:center}
+.col-row:nth-child(-n+3) .pos{color:var(--gold)}
+.col-pct{text-align:right}
+.col-pct b{font-family:var(--display);font-weight:400;font-size:1.15rem;color:var(--text)}
+.col-inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:0 14px 14px}
+@media (max-width:620px){.col-row summary{grid-template-columns:24px minmax(0,1fr) 84px;gap:8px;padding:10px}}
+/* House */
+.house-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:18px;align-items:center;border-color:rgba(255,138,31,.45);background:linear-gradient(120deg,rgba(255,138,31,.12),var(--panel) 45%,var(--bg2))}
+.house-hero .bonus{padding:12px;border-radius:12px;background:var(--bg2);border:1px solid var(--line)}
+@media (max-width:900px){.house-hero{grid-template-columns:1fr}}
 .supporter{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--bg2);border:1px solid var(--line2);color:var(--text);font-weight:500;font-size:.9rem}
 .supporter.sub{border-color:rgba(255,214,102,.6);background:linear-gradient(135deg,rgba(255,214,102,.16),rgba(255,138,31,.08));color:var(--gold)}
 .foot{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--dim);font-size:.85rem}

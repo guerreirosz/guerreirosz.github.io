@@ -130,6 +130,7 @@
         <div class="grid g2" style="gap:10px">
           <div class="timer" id="tMega"><span class="small dim">Mega Boss de sábado</span><span class="t">…</span><span class="tiny dim">sáb 15h–18h, se a barra de silver encher</span></div>
           <div class="timer" id="tDaily"><span class="small dim">Novo dia (boss e Guild War)</span><span class="t">…</span><span class="tiny dim">vira à meia-noite</span></div>
+          <div class="timer" id="tCol0"><span class="small dim">Novo pedido do Coletor</span><span class="t">…</span><span class="tiny dim">00h · 06h · 12h · 18h · <a href="#/coletor">ver rotas</a></span></div>
           <div class="timer" id="tShop"><span class="small dim">Nova vitrine da loja da guilda</span><span class="t">…</span><span class="tiny dim">toda segunda, 00:00</span></div>
           <div class="timer" id="tMonth"><span class="small dim">Moedas de contribuição zeram</span><span class="t">…</span><span class="tiny dim">dia 1º de cada mês</span></div>
         </div>
@@ -190,6 +191,8 @@
         <a class="tile" href="#/boss"><span class="em">⚔️</span><b>Boss da guilda</b><span>Debuffers + DPS, time ideal e lista do que upar.</span></a>
         <a class="tile" href="#/dex"><span class="em">🔎</span><b>Onde pego?</b><span>Rotas ordenadas pela maior chance de encontro.</span></a>
         <a class="tile" href="#/itens"><span class="em">💎</span><b>Itens e farm</b><span>Pedras, fragmentos, placas e charms: a melhor rota para cada um.</span></a>
+        <a class="tile" href="#/coletor"><span class="em">📦</span><b>Pedido do Coletor</b><span>Pediram "3 do tipo X"? As rotas onde o tipo mais aparece.</span></a>
+        <a class="tile" href="#/house"><span class="em">🏡</span><b>House</b><span>Pasto certo, calculadora da fazenda e stamina de Mega.</span></a>
         <a class="tile" href="#/tms"><span class="em">💿</span><b>TMs</b><span>Escolha uma TM e veja quem aprende, do mais forte ao mais fraco.</span></a>
         <a class="tile" href="#/rotas"><span class="em">🗺️</span><b>Rotas</b><span>Quem aparece, requisitos e bônus de XP de cada mapa.</span></a>
         <a class="tile" href="#/mega"><span class="em">🧬</span><b>Mega</b><span>Mega Boss de sábado, loja de pedras e as ${W.megas.length} formas.</span></a>
@@ -214,7 +217,7 @@
     const tick = () => {
       const mb = megaBossState();
       if (mb.live) setT('tMega', 'AO VIVO · ' + countdown(mb.until), 0, true); else setT('tMega', null, mb.at);
-      setT('tDaily', null, nextDaily()); setT('tShop', null, nextWeekday(1, 0)); setT('tMonth', null, nextMonthStart());
+      setT('tDaily', null, nextDaily()); setT('tCol0', null, nextCollector()); setT('tShop', null, nextWeekday(1, 0)); setT('tMonth', null, nextMonthStart());
     };
     tickers.push(tick); tick();
     globalSearch($('#gq'), $('#gres'));
@@ -583,7 +586,7 @@
   // =====================================================================
   // POKÉDEX / ONDE PEGO
   // =====================================================================
-  let dexState = { q: '', types: new Set(), onlyWild: false, sort: 'id' };
+  let dexState = { q: '', types: new Set(), onlyWild: false, onlyCol: false, sort: 'id' };
   function pageDex(slug) {
     app.innerHTML = `
     <div class="page">
@@ -591,7 +594,8 @@
       <div class="card">
         <div class="row"><div class="search-wrap" style="flex:1;min-width:220px"><span class="ico">🔍</span><input type="search" id="dq" placeholder="Nome do Pokémon…" value="${esc(dexState.q)}"></div>
           <select id="dsort" style="width:auto"><option value="id">Nº da Dex</option><option value="name">Nome</option><option value="chance">Mais fácil de achar</option><option value="bst">Mais forte (total base)</option></select>
-          <label class="toggle"><input type="checkbox" id="dwild" ${dexState.onlyWild ? 'checked' : ''}> Só quem aparece no mato</label></div>
+          <label class="toggle"><input type="checkbox" id="dwild" ${dexState.onlyWild ? 'checked' : ''}> Só quem aparece no mato</label>
+          <label class="toggle" title="Espécies comuns, incomuns ou raras numa rota: as únicas que o Coletor pede"><input type="checkbox" id="dcol" ${dexState.onlyCol ? 'checked' : ''}> Só quem o Coletor pede</label></div>
         <div class="type-filter mt">${S.TYPES.map((t) => `<button class="type ${dexState.types.has(t) ? 'on' : ''}" style="--c:${TI[t][1]}" data-t="${t}">${TI[t][0]}</button>`).join('')}</div>
       </div>
       <div class="dex-grid mt" id="dgrid"></div>
@@ -599,7 +603,7 @@
     $('#dsort').value = dexState.sort;
     const draw = () => {
       const q = dexState.q.toLowerCase();
-      let arr = W.species.filter((s) => (!q || s.n.toLowerCase().includes(q) || String(s.id) === q) && (!dexState.types.size || s.t.some((t) => dexState.types.has(t))) && (!dexState.onlyWild || s.w.some((w) => w[1] === 0)));
+      let arr = W.species.filter((s) => (!q || s.n.toLowerCase().includes(q) || String(s.id) === q) && (!dexState.types.size || s.t.some((t) => dexState.types.has(t))) && (!dexState.onlyWild || s.w.some((w) => w[1] === 0)) && (!dexState.onlyCol || s.w.some((w) => w[1] === 0 && w[4] && w[4] !== 'epico' && ROUTE[w[0]]?.k === 'route')));
       const best = (s) => Math.max(0, ...s.w.map((w) => w[5] || 0));
       if (dexState.sort === 'name') arr.sort((a, b) => a.n.localeCompare(b.n));
       else if (dexState.sort === 'chance') arr.sort((a, b) => best(b) - best(a));
@@ -613,6 +617,7 @@
     $('#dq').oninput = (e) => { dexState.q = e.target.value; draw(); };
     $('#dsort').onchange = (e) => { dexState.sort = e.target.value; draw(); };
     $('#dwild').onchange = (e) => { dexState.onlyWild = e.target.checked; draw(); };
+    $('#dcol').onchange = (e) => { dexState.onlyCol = e.target.checked; draw(); };
     $$('.type-filter button').forEach((b) => b.onclick = () => { const t = b.dataset.t; dexState.types.has(t) ? dexState.types.delete(t) : dexState.types.add(t); b.classList.toggle('on'); draw(); });
     draw();
     if (slug) openMon(slug);
@@ -860,6 +865,239 @@
   }
 
   // =====================================================================
+  // PEDIDO DO COLETOR
+  // =====================================================================
+  // Pagamento do Coletor pelo nível de treinador da rota (wiki: Coletores)
+  const COLLECTOR_PAY = [[75, 55000, 16000], [60, 42000, 11000], [48, 32000, 7000], [35, 24000, 4000], [20, 18000, 1800], [11, 13000, 600], [5, 9000, 200], [1, 6000, 0]];
+  const routeTrainerLvl = (r) => { const m = r.rq.join(' ').match(/Nível de treinador (\d+)/); return m ? +m[1] : 1; };
+  const collectorPay = (r) => { const lv = routeTrainerLvl(r); return COLLECTOR_PAY.find(([min]) => lv >= min); };
+  // janelas do pedido: 00h, 06h, 12h e 18h (relógio do servidor; o site usa o horário de Brasília)
+  function nextCollector() { const b = brtNow(); const h = b.getUTCHours(); const next = (Math.floor(h / 6) + 1) * 6; return brtToMs(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate(), next); }
+  const REGIONS = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos'];
+  let colState = { type: 'water', region: '', sort: 'chance', noEpic: true };
+  function pageCollector() {
+    app.innerHTML = `
+    <div class="page">
+      <div class="section-head"><div><div class="kicker">Missões de entrega</div><h2>Pedido do Coletor</h2><p>O Coletor pediu "3 do tipo X"? Escolha o tipo e veja as rotas onde ele aparece mais.</p></div>
+        <div class="timer" id="tCol" style="min-width:220px"><span class="small dim">Próximo pedido do Coletor</span><span class="t">…</span><span class="tiny dim">00h · 06h · 12h · 18h</span></div></div>
+      <div class="card">
+        <div class="form-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+          <label class="field">Tipo pedido<select id="cType">${S.TYPES.map((t) => `<option value="${t}" ${t === colState.type ? 'selected' : ''}>${TI[t][0]}</option>`).join('')}</select></label>
+          <label class="field">Região<select id="cReg"><option value="">Todas as regiões</option>${REGIONS.map((g) => `<option ${g === colState.region ? 'selected' : ''}>${g}</option>`).join('')}<option value="Mapa especial" ${colState.region === 'Mapa especial' ? 'selected' : ''}>Mapas especiais</option></select></label>
+          <label class="field">Ordenar por<select id="cSort"><option value="chance">Maior chance do tipo</option><option value="species">Mais espécies do tipo</option><option value="pay">Coletor que paga mais</option><option value="route">Ordem do mundo</option></select></label>
+          <label class="toggle" style="align-self:end"><input type="checkbox" id="cEpic" ${colState.noEpic ? 'checked' : ''}> Ignorar épicos</label>
+        </div>
+        <p class="tiny dim" style="margin:10px 0 0">O Coletor só pede espécies <b>comuns, incomuns e raras</b> da rota; épicos nunca entram. A chance é a soma das espécies do tipo (contando os dois tipos de cada Pokémon), sem lure nem bônus.</p>
+      </div>
+      <p class="small dim mt" id="cCount"></p>
+      <div id="cList" class="col-list"></div>
+      <div class="grid g2 mt2">
+        <div class="card">
+          <h3>Como o Coletor funciona</h3>
+          <ul class="small">
+            <li>Todo mapa de caça tem um Coletor. O pedido padrão é <b>4 espécies × 3 unidades</b>, por espécie ou por tipo.</li>
+            <li>Renova a cada <b>6 horas</b> (00h, 06h, 12h e 18h) e é <b>igual para todo mundo</b> no mesmo mapa. Dá para combinar com a guilda!</li>
+            <li><b>Até 4 entregas por janela</b>, somando todos os mapas.</li>
+            <li>A entrega <b>consome</b> os Pokémon da Box, começando pelos de menor nível. A equipe nunca entra.</li>
+            <li>Shiny, Mega e Pokémon com <b>cadeado</b> nunca são entregues. Tranque os que você quer guardar!</li>
+            <li>Nas vilas o pedido é menor (1 espécie × 2) e paga 2.500 silver.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Quanto paga</h3>
+          <div class="tbl-wrap"><table><thead><tr><th>Nível de treinador da rota</th><th class="num">Silver</th><th class="num">Exp. de treinador</th></tr></thead><tbody>
+            ${[...COLLECTOR_PAY].reverse().map(([lv, s, x]) => `<tr><td>${lv}+</td><td class="num">${fmt(s)}</td><td class="num">${x ? fmt(x) : '—'}</td></tr>`).join('')}
+          </tbody></table></div>
+          <p class="tiny dim mt">Além disso, cada entrega traz um kit de itens que muda por mapa e por dia. Pedido por <b>espécie</b>? Use o <a href="#/dex">Onde pego?</a>.</p>
+        </div>
+      </div>
+    </div>`;
+    $('#cSort').value = colState.sort;
+    const draw = () => {
+      const t = colState.type;
+      const rows = [];
+      for (const r of W.routes) {
+        if (r.k !== 'route') continue;
+        if (colState.region && r.rg !== colState.region) continue;
+        const group = [];
+        for (const [sp, lv, rr, ch] of r.s) {
+          const s = BYSLUG[sp];
+          if (!s || ch == null || !s.t.includes(t)) continue;
+          if (colState.noEpic && rr === 'epico') continue;
+          group.push({ s, lv, rr, ch });
+        }
+        if (!group.length) continue;
+        group.sort((a, b) => b.ch - a.ch);
+        rows.push({ r, group, total: Math.min(100, group.reduce((a, g) => a + g.ch, 0)), pay: collectorPay(r) });
+      }
+      const order = (r) => { const m = r.slug.match(/route_(\d+)/); return m ? +m[1] : 9999; };
+      rows.sort(colState.sort === 'route' ? (a, b) => order(a.r) - order(b.r)
+        : colState.sort === 'species' ? (a, b) => b.group.length - a.group.length || b.total - a.total
+        : colState.sort === 'pay' ? (a, b) => b.pay[1] - a.pay[1] || b.total - a.total
+        : (a, b) => b.total - a.total || b.group.length - a.group.length);
+      $('#cCount').innerHTML = `${rows.length} rotas com Pokémon do tipo ${tchip(t)}. Toque numa rota para ver as espécies.`;
+      $('#cList').innerHTML = rows.map((x, i) => `
+        <details class="col-row">
+          <summary>
+            <span class="pos">${i + 1}</span>
+            <span style="min-width:0"><b>${esc(x.r.n)}</b><span class="tiny dim" style="display:block">${esc(x.r.rg)} · ${esc(x.r.lv)} · ${x.group.length} espécie${x.group.length > 1 ? 's' : ''} · Coletor paga ${fmt(x.pay[1])} silver</span></span>
+            <span class="col-pct"><b>${fmt(x.total, 1)}%</b><span class="bar"><i style="width:${x.total}%"></i></span></span>
+          </summary>
+          <div class="col-inner">
+            ${x.group.map((g) => `<a class="mon" href="#/dex/${g.s.slug}">${spr(g.s, 'sm')}<span style="min-width:0"><b>${esc(g.s.n)}</b><span class="tiny">${rar(g.rr)} · <b>${pctFmt(g.ch)}</b></span></span></a>`).join('')}
+            <a class="small" href="#/rotas/${esc(x.r.slug)}" style="align-self:center">Ver a rota completa →</a>
+          </div>
+        </details>`).join('') || '<div class="muted-box">Nenhuma rota com esse tipo nessa região.</div>';
+    };
+    $('#cType').onchange = (e) => { colState.type = e.target.value; draw(); };
+    $('#cReg').onchange = (e) => { colState.region = e.target.value; draw(); };
+    $('#cSort').onchange = (e) => { colState.sort = e.target.value; draw(); };
+    $('#cEpic').onchange = (e) => { colState.noEpic = e.target.checked; draw(); };
+    draw();
+    const tick = () => { const el = $('#tCol'); if (el) $('.t', el).textContent = countdown(nextCollector()); };
+    tickers.push(tick); tick();
+  }
+
+  // =====================================================================
+  // HOUSE
+  // =====================================================================
+  const FARM_XP = [80, 100, 120, 140, 160, 180, 200, 220, 240]; // XP do nível 1→2 … 9→10
+  const PASTURE_BONUS = { grass: 'Plantas crescem 15% mais rápido', water: 'Todo canteiro conta como regado (+20%)', normal: 'Colhe sozinho e nada murcha', ground: '+2 canteiros no quintal' };
+  function easiest(filter, n = 3) {
+    // só rotas normais (sem portal nem mapa de evento): a melhor rota fixa de cada espécie
+    const best = (s) => [...s.w].filter((w) => w[1] === 0 && w[5] != null && ROUTE[w[0]]?.k === 'route' && ROUTE[w[0]].rg !== 'Mapa especial').sort((a, b) => b[5] - a[5])[0];
+    return W.species.filter(filter).map((s) => ({ s, o: { best: best(s) } })).filter((x) => x.o.best)
+      .sort((a, b) => b.o.best[5] - a.o.best[5]).slice(0, n);
+  }
+  const monChip = (x) => `<a class="chip" href="#/dex/${x.s.slug}">${spr(x.s, 'sm')}${esc(x.s.n)} <span class="tiny dim">${esc(x.o.best[2].split(' — ')[0])} · ${pctFmt(x.o.best[5])}</span></a>`;
+  let houseState = store.get('house', { beds: 4, level: 1, water: true, grass: true, normal: true, cook: true, megas: 1 });
+  function pageHouse() {
+    const both = (a, b) => (s) => s.t.includes(a) && s.t.includes(b);
+    const duoA = easiest(both('water', 'ground')), duoB = easiest(both('normal', 'grass'));
+    const altA = easiest(both('normal', 'water'), 2), altB = easiest(both('grass', 'ground'), 2);
+    const producers = [['Wool', ['Mareep', 'Flaaffy', 'Ampharos'], '12 h'], ['Berry Juice', ['Shuckle'], '12 h'], ['Moomoo Milk', ['Miltank'], '8 h'], ['Honey', ['Combee', 'Vespiquen'], '6 h']];
+    app.innerHTML = `
+    <div class="page">
+      <div class="section-head"><div><div class="kicker">House do jogador</div><h2>Evolua a House mais rápido</h2><p>Pasto certo, calculadora da fazenda e o que vale plantar. Tudo com base na wiki oficial.</p></div></div>
+
+      <section>
+        <div class="card house-hero">
+          <div><div class="kicker">⭐ O truque do pasto</div><h3 style="margin:0">2 Pokémon = os 4 bônus</h3>
+          <p class="small" style="margin:8px 0 0">Cada tipo no pasto dá um bônus, e Pokémon de dois tipos valem pelos dois. Um <b>Água/Terra</b> + um <b>Normal/Planta</b> ativam tudo com só 2 vagas.</p></div>
+          <div class="grid g2" style="gap:10px">
+            <div class="bonus"><div class="row" style="gap:4px">${tchip('water')}${tchip('ground')}</div><div class="row mt" style="gap:6px">${duoA.map(monChip).join('')}</div></div>
+            <div class="bonus"><div class="row" style="gap:4px">${tchip('normal')}${tchip('grass')}</div><div class="row mt" style="gap:6px">${duoB.map(monChip).join('')}</div></div>
+          </div>
+        </div>
+        <div class="grid g4 mt">
+          ${Object.entries(PASTURE_BONUS).map(([t, txt]) => `<div class="card tight">${tchip(t)}<p class="small" style="margin:8px 0 6px">${esc(txt)}</p><div class="row" style="gap:6px">${easiest((s) => s.t.includes(t), 2).map(monChip).join('')}</div></div>`).join('')}
+        </div>
+        <p class="tiny dim mt">Outra dupla possível: ${[...altA, ...altB].map((x) => `<a href="#/dex/${x.s.slug}">${esc(x.s.n)}</a> (${x.s.t.map((t) => TI[t][0]).join('/')})`).join(', ')}. Cópias do mesmo tipo não somam. No pasto o Pokémon não caça nem evolui, mas ganha 10% da XP da caçada (até o nível médio da equipe).</p>
+      </section>
+
+      <section class="mt2">
+        <div class="section-head"><div><div class="kicker">Calculadora</div><h2>Sua fazenda</h2></div><p>Os valores são médias (fruta tier 1 rende 4–6, tier 2 rende 3–5).</p></div>
+        <div class="grid g2">
+          <div class="card">
+            <div class="form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+              <label class="field">Canteiros que você tem<input type="number" id="hBeds" min="1" max="26" value="${houseState.beds}"></label>
+              <label class="field">Nível da fazenda agora<select id="hLvl">${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${i + 1 === houseState.level ? 'selected' : ''}>Nível ${i + 1}</option>`).join('')}</select></label>
+              <label class="field">Pokémon com Mega no time<input type="number" id="hMegas" min="0" max="6" value="${houseState.megas}"></label>
+              <span></span>
+            </div>
+            <div class="row mt">
+              <label class="toggle"><input type="checkbox" id="hWater" ${houseState.water ? 'checked' : ''}> Água no pasto (ou eu rego)</label>
+              <label class="toggle"><input type="checkbox" id="hGrass" ${houseState.grass ? 'checked' : ''}> Planta no pasto</label>
+              <label class="toggle"><input type="checkbox" id="hNormal" ${houseState.normal ? 'checked' : ''}> Normal no pasto</label>
+              <label class="toggle"><input type="checkbox" id="hCook" ${houseState.cook ? 'checked' : ''}> Cozinho as frutas</label>
+            </div>
+          </div>
+          <div class="card" id="hOut"></div>
+        </div>
+      </section>
+
+      <section class="mt2">
+        <div class="section-head"><div><div class="kicker">Dicas</div><h2>O que a guilda faz</h2></div></div>
+        <div class="grid g3">
+          <div class="card"><h3>🌱 Subir a fazenda</h3><ul class="small"><li>Do nível 1 ao 10 são <b>1.440 XP</b>.</li><li>Fruta tier 1 colhida = 5 XP; tier 2 = 15 XP.</li><li>A partir do nível 5, <b>cozinhe</b>: cada Lunchbox dá +20 XP. Colher e cozinhar quase dobra o XP por fruta.</li><li>Regar dá +20% de colheita, 1× por ciclo.</li></ul></div>
+          <div class="card"><h3>💰 Economizar silver</h3><ul class="small"><li>Sementes tier 1 também saem na <b>Loja de Bronze do Professor</b>.</li><li>Canteiros: o 7º (2M) e o 8º (4M) são os caros. Do <b>9º ao 16º custa 1M cada</b>.</li><li>Pokémon de <b>Terra</b> no pasto dá 2 canteiros de graça.</li><li>Fruta não colhida murcha em 3× o tempo de cultivo, mas a semente volta.</li></ul></div>
+          <div class="card"><h3>🧬 Stamina da Mega</h3><ul class="small"><li>Tier 1 (+3 stamina, 2 h) rende <b>mais stamina por hora</b> que a tier 2 (+8, 6 h), e a semente custa 4× menos.</li><li>A tier 2 só compensa se você fica muito tempo fora e não tem Normal no pasto.</li><li>Cada Mega gasta 1 de stamina por luta, até 30.</li></ul></div>
+        </div>
+      </section>
+
+      <section class="mt2 grid g2">
+        <div class="card">
+          <h3>🍱 Lunchbox (1 h de AUTO por unidade, até 24 por vaga)</h3>
+          <div class="tbl-wrap"><table><thead><tr><th>Lunchbox</th><th>Efeito</th><th>Frutas</th></tr></thead><tbody>
+            <tr><td>Feast I</td><td>+5% XP dos Pokémon</td><td class="small">3 Oran, 1 Pomeg</td></tr>
+            <tr><td>Hunter I</td><td>+5% loot</td><td class="small">2 Cheri, 2 Chesto</td></tr>
+            <tr><td>Lure I</td><td>+3% captura <span class="tiny dim">(vale até na mão)</span></td><td class="small">2 Pecha, 1 Rawst</td></tr>
+            <tr><td>Trainer I</td><td>+3% XP de treinador</td><td class="small">2 Tamato, 2 Persim</td></tr>
+          </tbody></table></div>
+          <p class="tiny dim mt">Cada uma custa 5.000 silver para cozinhar. Uma vaga por efeito. Lunchbox é negociável.</p>
+        </div>
+        <div class="card">
+          <h3>🐄 Pasto que produz (vende no mercado)</h3>
+          <div class="tbl-wrap"><table><thead><tr><th>Produto</th><th>Quem produz</th><th class="num">A cada</th></tr></thead><tbody>
+            ${producers.map(([p, names, t]) => `<tr><td>${p}</td><td class="small">${names.map((n) => BYNAME[n.toLowerCase()] ? monLink(BYNAME[n.toLowerCase()]) : esc(n)).join(', ')}</td><td class="num">${t}</td></tr>`).join('')}
+          </tbody></table></div>
+          <p class="tiny dim mt">Acumula até 48 h sem visita. <b>Shiny produz +1</b> por lote.</p>
+        </div>
+      </section>
+
+      <section class="mt2 grid g2">
+        <div class="card">
+          <h3>🧱 Canteiros e terreno</h3>
+          <div class="tbl-wrap"><table><tbody>
+            <tr><td>Começa com</td><td class="num">4 canteiros</td></tr>
+            <tr><td>5º · 6º · 7º · 8º</td><td class="num">500 mil · 1M · 2M · 4M</td></tr>
+            <tr><td>9º ao 16º</td><td class="num">1M cada</td></tr>
+            <tr><td>17º ao 24º</td><td class="num">5M cada</td></tr>
+            <tr><td>Árvore pequena · grande · pedra</td><td class="num">100 mil · 200 mil · 1M</td></tr>
+          </tbody></table></div>
+          <p class="tiny dim mt">A House custa 25.000.000 silver e pede nível de treinador 20. Móveis são só enfeite (não dão bônus).</p>
+        </div>
+        <div class="card">
+          <h3>🍓 Frutas</h3>
+          <div class="tbl-wrap"><table><thead><tr><th>Tier</th><th>Frutas</th><th class="num">Cultivo</th><th class="num">Semente</th></tr></thead><tbody>
+            <tr><td>1</td><td class="small">Oran, Cheri, Chesto, Pecha, Rawst, Aspear, Persim, Pomeg, Kelpsy, Qualot, Hondew, Grepa, Tamato</td><td class="num">2 h</td><td class="num">25 mil</td></tr>
+            <tr><td>2</td><td class="small">Sitrus, Lum, Leppa <span class="tiny dim">(fazenda nível 10)</span></td><td class="num">6 h</td><td class="num">100 mil</td></tr>
+          </tbody></table></div>
+          <p class="tiny dim mt">Frutas são negociáveis; sementes não. <a href="${W.src}/mechanics/island" target="_blank" rel="noopener">Página completa na wiki ↗</a></p>
+        </div>
+      </section>
+    </div>`;
+    const calc = () => {
+      const st = houseState;
+      const growMul = st.grass ? 1 / 1.15 : 1;
+      const water = st.water ? 1.2 : 1;
+      const t1Grow = 2 * growMul, t2Grow = 6 * growMul;
+      const t1Fruit = 5 * water, t2Fruit = 4 * water;
+      const beds = Math.max(1, st.beds);
+      const t1PerH = beds * t1Fruit / t1Grow; // frutas por hora
+      const t2PerH = beds * t2Fruit / t2Grow;
+      const xpPerFruit = 5 + (st.cook && st.level >= 5 ? 5 : 0);
+      const need = FARM_XP.slice(st.level - 1).reduce((a, b) => a + b, 0);
+      const xpPerH = t1PerH * xpPerFruit;
+      const hours = need / xpPerH;
+      const stamT1 = t1PerH * 3 * 24, stamT2 = t2PerH * 8 * 24;
+      const refills = (v) => st.megas ? fmt(v / (30 * st.megas), 1) : '—';
+      $('#hOut').innerHTML = `
+        <div class="grid g2" style="gap:10px">
+          <div class="timer"><span class="small dim">Até a fazenda nível 10</span><span class="t">${st.level >= 10 ? 'já está no 10! 🎉' : hours < 1 ? fmt(hours * 60) + ' min' : fmt(hours, 1) + ' h de colheita'}</span><span class="tiny dim">${st.level >= 10 ? '' : `faltam ${fmt(need)} XP · ~${fmt(xpPerH)} XP/h`}</span></div>
+          <div class="timer"><span class="small dim">Frutas tier 1 por dia</span><span class="t">${fmt(t1PerH * 24)}</span><span class="tiny dim">colhendo sempre que fica pronto</span></div>
+          <div class="timer"><span class="small dim">Stamina de Mega/dia (tier 1)</span><span class="t">${fmt(stamT1)}</span><span class="tiny dim">recarrega ${refills(stamT1)}× o time de Megas</span></div>
+          <div class="timer"><span class="small dim">Stamina de Mega/dia (tier 2)</span><span class="t">${fmt(stamT2)}</span><span class="tiny dim">recarrega ${refills(stamT2)}× · precisa fazenda 10</span></div>
+        </div>
+        <p class="tiny dim mt">${st.normal ? 'Com Normal no pasto a colheita é automática, então dá para manter o ritmo mesmo fora do jogo.' : 'Sem Normal no pasto você precisa entrar para colher; fruta pronta murcha em 3× o tempo de cultivo.'} ${st.level < 5 && st.cook ? 'A cozinha só abre na fazenda nível 5: até lá a conta usa só a colheita.' : ''}</p>`;
+    };
+    const bind = (id, key, num) => { const el = $('#' + id); el.oninput = el.onchange = () => { houseState[key] = el.type === 'checkbox' ? el.checked : Math.max(0, +el.value || 0); store.set('house', houseState); calc(); }; };
+    bind('hBeds', 'beds'); bind('hLvl', 'level'); bind('hMegas', 'megas');
+    bind('hWater', 'water'); bind('hGrass', 'grass'); bind('hNormal', 'normal'); bind('hCook', 'cook');
+    calc();
+  }
+
+  // =====================================================================
   // ROTAS
   // =====================================================================
   let rotaState = { q: '', region: '', sort: 'order' };
@@ -1052,6 +1290,8 @@
     const [sec, arg] = path.split('/');
     $$('#nav a').forEach((a) => a.classList.toggle('on', a.dataset.r === (sec || '')));
     $('#nav').classList.remove('open');
+    const more = $('#navMore');
+    if (more) { more.classList.toggle('on', ['mega', 'house', 'shiny', 'guerra'].includes(sec)); more.parentElement.classList.remove('open'); }
     try {
       if (!sec) pageHome();
       else if (sec === 'boss') pageBoss();
@@ -1059,6 +1299,8 @@
       else if (sec === 'itens') pageItems(arg && decodeURIComponent(arg));
       else if (sec === 'rotas') pageRoutes(arg && decodeURIComponent(arg));
       else if (sec === 'tms') pageTms(arg && decodeURIComponent(arg));
+      else if (sec === 'coletor') pageCollector();
+      else if (sec === 'house') pageHouse();
       else if (sec === 'mega') pageMega();
       else if (sec === 'shiny') pageShiny();
       else if (sec === 'guerra') pageWar();
@@ -1096,6 +1338,9 @@
     lastSec = sec; route();
   });
   $('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
+  // menu "Mais ▾" (no celular ele já aparece aberto dentro do menu)
+  $('#navMore').onclick = (e) => { e.stopPropagation(); $('#navMore').parentElement.classList.toggle('open'); };
+  document.addEventListener('click', (e) => { const box = $('#navMore').parentElement; if (!box.contains(e.target)) box.classList.remove('open'); });
   $('#authorFoot').textContent = SITE.author;
   if (SITE.livepix) for (const id of ['donateFoot', 'donateTop']) { const d = $('#' + id); d.href = SITE.livepix; d.classList.remove('hidden'); }
   const d = W.gen ? new Date(W.gen) : null;
