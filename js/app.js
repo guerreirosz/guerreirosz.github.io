@@ -271,10 +271,15 @@
   function currentBoss() {
     const shared = sharedBossFromHash();
     if (shared) return shared;
-    const id = store.get('bossId', null);
     const list = allBosses();
-    return list.find((b) => b.id === id) || list[list.length - 1] || window.GUILD_BOSSES[0];
+    // o "boss de hoje" é o de data mais recente; uma escolha manual só vale se for feita depois dele aparecer
+    const newest = [...list].sort((a, b) => String(b.seen || '').localeCompare(String(a.seen || '')))[0] || window.GUILD_BOSSES[0];
+    const pick = store.get('bossPick', null);
+    const chosen = pick && pick.day >= String(newest.seen || '') ? list.find((b) => b.id === pick.id) : null;
+    return chosen || newest;
   }
+  const todayBRT = () => brtNow().toISOString().slice(0, 10);
+  const pickBoss = (id) => store.set('bossPick', { id, day: todayBRT() });
   function bossObj(b) {
     const moves = b.moves.map((n) => S.moveByName(n)).filter(Boolean);
     return { name: b.species, level: +b.level || 100, types: b.types, atk: +b.atk, def: +b.def, spa: +b.spa, spd: +b.spd, spe: +b.spe, moves };
@@ -380,7 +385,7 @@
     </div>`;
 
     // eventos
-    $('#bossSel').onchange = (e) => { store.set('bossId', e.target.value); if (location.hash.includes('b=')) location.hash = '#/boss'; else route(); };
+    $('#bossSel').onchange = (e) => { pickBoss(e.target.value); if (location.hash.includes('b=')) location.hash = '#/boss'; else route(); };
     $('#newBossBtn').onclick = () => openBossForm(b);
     $('#shareBtn').onclick = () => {
       const url = location.href.split('#')[0] + '#/boss?b=' + encodeBoss(b);
@@ -577,7 +582,7 @@
       };
       const bad = b.moves.filter((m) => !S.moveByName(m));
       if (bad.length) { alert('Não achei estes golpes na wiki: ' + bad.join(', ') + '\nConfira a grafia (em inglês, como no jogo).'); return; }
-      const list = store.get('bosses', []); list.push(b); store.set('bosses', list); store.set('bossId', b.id);
+      const list = store.get('bosses', []); list.push(b); store.set('bosses', list); pickBoss(b.id);
       location.hash = '#/boss'; route(); toast('Boss salvo!');
     };
     box.scrollIntoView({ behavior: 'smooth', block: 'start' });
